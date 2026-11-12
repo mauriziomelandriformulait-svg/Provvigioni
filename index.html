@@ -18,10 +18,6 @@
                         erpHeaderBg: '#ebb036',
                         erpGrayBg: '#e9ecef',
                         erpBorder: '#ccc',
-                        telerikHeader: '#fafafa',
-                        telerikBorder: '#e0e0e0',
-                        telerikHover: '#f5f5f5',
-                        telerikSelected: '#e3f2fd'
                     }
                 }
             }
@@ -77,25 +73,26 @@
             cursor: not-allowed;
         }
 
-        /* Telerik Grid Custom Styling con Font Verdana */
+        /* Telerik Grid Custom Styling - Tema Azzurro Standard Report */
         .k-grid {
-            border: 1px solid #d9d9d9;
+            border: 1px solid #c5c5c5;
             background-color: #ffffff;
-            border-radius: 4px;
-            font-family: Verdana, Geneva, Tahoma, sans-serif;
-            font-size: 11px;
+            border-radius: 3px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 11.5px;
         }
         .k-grid-header {
-            background-color: #f3f4f6;
-            border-bottom: 2px solid #e5e7eb;
-            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            background-color: #e5f1fb; /* Azzurro Telerik Classic Header */
+            border-bottom: 2px solid #bce8f1;
+            color: #0b5ed7;
+            font-family: 'Segoe UI', Arial, sans-serif;
         }
         .k-grid-header th {
             padding: 8px 12px;
-            font-weight: 700;
-            color: #374151;
+            font-weight: 600;
+            color: #042940;
             text-align: left;
-            border-right: 1px solid #e5e7eb;
+            border-right: 1px solid #d0e1fd;
             user-select: none;
         }
         .k-grid-header th:last-child {
@@ -103,33 +100,33 @@
         }
         .k-grid-content td {
             padding: 6px 12px;
-            border-bottom: 1px solid #f3f4f6;
-            border-right: 1px solid #f3f4f6;
-            color: #1f2937;
-            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            border-bottom: 1px solid #eef2f7;
+            border-right: 1px solid #eef2f7;
+            color: #212529;
+            font-family: 'Segoe UI', Arial, sans-serif;
         }
         .k-grid-content tr:hover {
-            background-color: #f0fdf4;
+            background-color: #f0f4f8;
         }
         .k-grid-footer {
-            background-color: #f9fafb;
-            border-top: 2px solid #e5e7eb;
-            font-weight: 700;
-            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            background-color: #f8fafc;
+            border-top: 2px solid #c5c5c5;
+            font-weight: 600;
+            font-family: 'Segoe UI', Arial, sans-serif;
         }
         .badge-liq {
-            background-color: #dcfce7;
-            color: #166534;
+            background-color: #d1e7dd;
+            color: #0f5132;
             padding: 2px 6px;
-            border-radius: 4px;
+            border-radius: 3px;
             font-size: 10px;
             font-weight: 600;
         }
         .badge-trat {
-            background-color: #fef9c3;
-            color: #854d0e;
+            background-color: #fff3cd;
+            color: #664d03;
             padding: 2px 6px;
-            border-radius: 4px;
+            border-radius: 3px;
             font-size: 10px;
             font-weight: 600;
         }
@@ -150,7 +147,6 @@
                 border: none !important;
                 box-shadow: none !important;
             }
-            /* Nasconde i pulsanti interni al report durante la stampa in PDF */
             #reportContainer button {
                 display: none !important;
             }
@@ -171,7 +167,6 @@
             
             <!-- BOTTONI AZIONE RIGIDA CON INDICATORE DI SUCCESSO -->
             <div class="flex items-center space-x-3 mt-2 sm:mt-0">
-                <!-- Spunta verde di conferma -->
                 <div id="successCheck" class="hidden flex items-center space-x-1.5 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200 transition-all duration-200">
                     <i class="fa-solid fa-circle-check text-sm"></i>
                     <span id="successText" class="text-xs font-semibold">Operazione completata</span>
@@ -179,13 +174,11 @@
 
                 <span class="text-xs font-semibold text-gray-600">Aziendale</span>
                 
-                <!-- Bottoncino Play/Esegui -->
                 <button onclick="eseguiElaborazione()" class="flex items-center space-x-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded text-xs font-semibold shadow-sm transition" title="Esegui Richiesta">
                     <i class="fa-regular fa-square-caret-right text-sm"></i>
                     <span>Esegui Richiesta</span>
                 </button>
 
-                <!-- Bottoncini ausiliari ERP (Spunta, Undo) -->
                 <button onclick="confermaForm()" class="p-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded text-gray-700 shadow-sm" title="Salva bozza">
                     <i class="fa-solid fa-check text-xs"></i>
                 </button>
@@ -193,7 +186,6 @@
                     <i class="fa-solid fa-rotate-left text-xs"></i>
                 </button>
                 
-                <!-- Pulsante Annulla -->
                 <button onclick="resetForm()" class="flex items-center space-x-1 px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 rounded text-xs text-gray-800 font-semibold shadow-sm">
                     <i class="fa-solid fa-xmark text-red-600"></i>
                     <span>Annullo Richiesta</span>
@@ -207,7 +199,6 @@
             <!-- SEZIONE SELEZIONE AGENTI -->
             <div class="space-y-4">
                 
-                <!-- Riga Tutti gli agenti -->
                 <div class="flex items-center">
                     <label class="w-40 text-right pr-4 font-semibold text-gray-700 text-xs">Tutti gli agenti</label>
                     <div class="flex items-center space-x-3">
@@ -219,7 +210,6 @@
                     </div>
                 </div>
 
-                <!-- Riga Agente (Combo) e Conto di incrocio -->
                 <div class="flex items-center">
                     <label class="w-40 text-right pr-4 font-semibold text-gray-700 text-xs">Agente</label>
                     <div class="w-60">
@@ -237,7 +227,6 @@
                     </div>
                 </div>
 
-                <!-- Riga Cat gestionali -->
                 <div class="flex items-start">
                     <label class="w-40 text-right pr-4 pt-1 font-semibold text-gray-700 text-xs">Cat gestionali</label>
                     <div class="flex flex-wrap gap-1.5 max-w-3xl">
@@ -256,7 +245,6 @@
                 
                 <div class="space-y-2.5 ml-10">
                     
-                    <!-- Option 1: Liquidabilità -->
                     <div class="flex items-center h-7">
                         <div class="w-36 flex items-center space-x-2">
                             <input type="radio" id="radioLiquidabilita" name="tipoElaborazione" value="LIQUIDABILITA" class="h-3.5 w-3.5 text-amber-600 focus:ring-amber-500 border-gray-300" onchange="aggiornaAbilitazioniTipo()">
@@ -270,7 +258,6 @@
                         </div>
                     </div>
 
-                    <!-- Option 2: Liquidazione -->
                     <div class="flex items-center h-7">
                         <div class="w-36 flex items-center space-x-2">
                             <input type="radio" id="radioLiquidazione" name="tipoElaborazione" value="LIQUIDAZIONE" class="h-3.5 w-3.5 text-amber-600 focus:ring-amber-500 border-gray-300" onchange="aggiornaAbilitazioniTipo()">
@@ -284,7 +271,6 @@
                         </div>
                     </div>
 
-                    <!-- Option 3: Anticipo -->
                     <div class="flex items-center h-7">
                         <div class="w-36 flex items-center space-x-2">
                             <input type="radio" id="radioAnticipo" name="tipoElaborazione" value="ANTICIPO" class="h-3.5 w-3.5 text-amber-600 focus:ring-amber-500 border-gray-300" onchange="aggiornaAbilitazioniTipo()">
@@ -302,7 +288,6 @@
                         </div>
                     </div>
 
-                    <!-- Option 4: Straordinarie -->
                     <div class="flex items-center h-7">
                         <div class="w-36 flex items-center space-x-2">
                             <input type="radio" id="radioStraordinarie" name="tipoElaborazione" value="STRAORDINARIE" class="h-3.5 w-3.5 text-amber-600 focus:ring-amber-500 border-gray-300" onchange="aggiornaAbilitazioniTipo()">
@@ -351,39 +336,39 @@
 
     <!-- LOADER DI CARICAMENTO (3 SECONDI) -->
     <div id="loaderContainer" class="hidden max-w-5xl w-full mx-auto bg-white rounded-lg border border-gray-300 shadow-md p-8 flex flex-col items-center justify-center space-y-3">
-        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-500"></div>
-        <p class="text-xs font-semibold text-gray-700 uppercase tracking-wider font-['Verdana']">Elaborazione richiesta in corso... (Attendere 3 secondi)</p>
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-sky-600"></div>
+        <p class="text-xs font-semibold text-sky-800 uppercase tracking-wider font-['Segoe_UI']">Elaborazione richiesta in corso... (Attendere 3 secondi)</p>
     </div>
 
     <!-- FRAME REPORT TELERIK (INIZIALMENTE NASCOSTO) -->
     <div id="reportContainer" class="hidden max-w-5xl w-full mx-auto bg-white rounded-lg border border-gray-300 shadow-md flex flex-col overflow-hidden">
         
-        <!-- TOOLBAR TELERIK REPORT -->
-        <div class="flex flex-wrap justify-between items-center px-4 py-2.5 bg-gray-100 border-b border-gray-300">
+        <!-- TOOLBAR TELERIK REPORT AZZURRA -->
+        <div class="flex flex-wrap justify-between items-center px-4 py-2.5 bg-sky-50 border-b border-sky-200">
             <div class="flex items-center space-x-3">
-                <div class="flex items-center space-x-1.5 text-gray-700 font-bold text-xs uppercase tracking-wider font-['Verdana']">
-                    <i class="fa-solid fa-table-cells text-amber-500"></i>
+                <div class="flex items-center space-x-1.5 text-sky-900 font-bold text-xs uppercase tracking-wider font-['Segoe_UI']">
+                    <i class="fa-solid fa-table-cells text-sky-600"></i>
                     <span>Telerik Report Viewer - Provvigioni 12/2024</span>
                 </div>
-                <span id="reportFilterBadge" class="bg-blue-100 text-blue-800 text-[11px] px-2 py-0.5 rounded border border-blue-200 font-semibold font-['Verdana']">
+                <span id="reportFilterBadge" class="bg-sky-100 text-sky-800 text-[11px] px-2 py-0.5 rounded border border-sky-300 font-semibold font-['Segoe_UI']">
                     Tutti gli Agenti
                 </span>
             </div>
 
             <!-- ACTION BUTTONS: ESPORTA CSV E ESPORTA PDF -->
             <div class="flex items-center space-x-2">
-                <button onclick="exportReportToCSV()" class="flex items-center space-x-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold shadow-sm transition font-['Verdana']">
+                <button onclick="exportReportToCSV()" class="flex items-center space-x-1.5 px-3 py-1 bg-sky-700 hover:bg-sky-800 text-white rounded text-xs font-semibold shadow-sm transition font-['Segoe_UI']">
                     <i class="fa-solid fa-file-excel"></i>
                     <span>Esporta (CSV)</span>
                 </button>
-                <button onclick="window.print()" class="flex items-center space-x-1.5 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold shadow-sm transition font-['Verdana']">
+                <button onclick="window.print()" class="flex items-center space-x-1.5 px-3 py-1 bg-sky-900 hover:bg-black text-white rounded text-xs font-semibold shadow-sm transition font-['Segoe_UI']">
                     <i class="fa-solid fa-file-pdf"></i>
                     <span>Esporta PDF</span>
                 </button>
             </div>
         </div>
 
-        <!-- GRIGLIA TELERIK STYLE CON FONT VERDANA -->
+        <!-- GRIGLIA TELERIK STYLE AZZURRA -->
         <div class="p-4 overflow-x-auto">
             <div class="k-grid">
                 <table class="w-full text-left border-collapse">
@@ -426,7 +411,7 @@
         </div>
         
         <!-- PAGER TELERIK -->
-        <div class="px-4 py-2 bg-gray-50 border-t border-gray-200 flex justify-between items-center text-xs text-gray-500 font-['Verdana']">
+        <div class="px-4 py-2 bg-sky-50 border-t border-sky-200 flex justify-between items-center text-xs text-sky-900 font-['Segoe_UI']">
             <span>Mostrati <strong id="recCount">0</strong> record correlati</span>
             <span class="italic">Telerik UI Engine v2024.3 - Ready</span>
         </div>
@@ -531,7 +516,7 @@
             }
         }
 
-        // AZIONE PRINCIPALE: ESEGUI ELABORAZIONE CON LOADER DI 3 SECONDI
+        // AZIONE PRINCIPALE: ESEGUI ELABORAZIONE CON LOADER DI 3 SECONDI E GENERAZIONE REPORT
         function eseguiElaborazione() {
             const tuttiAgenti = document.getElementById('tuttiAgenti').value;
             const codiceAgente = document.getElementById('codiceAgente').value;
@@ -548,6 +533,7 @@
             loader.classList.remove('hidden');
             loader.scrollIntoView({ behavior: 'smooth' });
 
+            // Attesa di 3 secondi prima di generare e mostrare il report
             setTimeout(() => {
                 loader.classList.add('hidden');
 
@@ -567,7 +553,7 @@
             }, 3000);
         }
 
-        // RENDER DELLA TABELLA IN STILE TELERIK GRID CON FONT VERDANA
+        // RENDER DELLA TABELLA IN STILE TELERIK GRID (TEMA AZZURRO)
         function renderTelerikReport(data) {
             const tbody = document.getElementById('reportTableBody');
             tbody.innerHTML = "";
@@ -611,7 +597,7 @@
                     <td class="text-right">${formatCurrency(row.imponibile)}</td>
                     <td class="text-center">${row.perc.toFixed(2)}%</td>
                     <td class="text-right font-bold ${row.da === 'D' ? 'text-red-600' : 'text-gray-900'}">${formatCurrency(row.provvigione)}</td>
-                    <td class="text-center font-bold ${row.da === 'D' ? 'text-red-600' : 'text-blue-600'}">${row.da}</td>
+                    <td class="text-center font-bold ${row.da === 'D' ? 'text-red-600' : 'text-sky-700'}">${row.da}</td>
                     <td class="text-center"><span class="${badgeClass}">${row.stato}</span></td>
                 `;
                 tbody.appendChild(tr);
