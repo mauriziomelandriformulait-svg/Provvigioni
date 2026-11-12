@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liquidazione/Anticipo Provvigioni Agenti</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        erpYellow: '#f5af2b',
+                        erpYellowDark: '#e69c24',
+                        erpHeaderBg: '#ebb036',
+                        erpGrayBg: '#e9ecef',
+                        erpBorder: '#ccc',
+                        telerikHeader: '#fafafa',
+                        telerikBorder: '#e0e0e0',
+                        telerikHover: '#f5f5f5',
+                        telerikSelected: '#e3f2fd'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f1f5f9;
+            font-size: 13px;
+        }
+
+        /* Styling per simulare l'interfaccia Legacy ERP */
+        .erp-input {
+            border: 1px solid #a6b9cc;
+            background-color: #ffffff;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            color: #222;
+            transition: all 0.15s ease-in-out;
+        }
+        .erp-input:focus {
+            outline: none;
+            border-color: #3182ce;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+        }
+        .erp-input:disabled {
+            background-color: #e2e8f0;
+            color: #a0aec0;
+            cursor: not-allowed;
+            border-color: #cbd5e0;
+        }
+
+        .erp-select {
+            border: 1px solid #a6b9cc;
+            background-color: #ffffff;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            color: #222;
+            transition: all 0.15s ease-in-out;
+        }
+        .erp-select:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+        }
+        .erp-select:disabled {
+            background-color: #e2e8f0;
+            color: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        /* Telerik Grid Custom Styling con Font Verdana */
+        .k-grid {
+            border: 1px solid #d9d9d9;
+            background-color: #ffffff;
+            border-radius: 4px;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            font-size: 11px;
+        }
+        .k-grid-header {
+            background-color: #f3f4f6;
+            border-bottom: 2px solid #e5e7eb;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+        }
+        .k-grid-header th {
+            padding: 8px 12px;
+            font-weight: 700;
+            color: #374151;
+            text-align: left;
+            border-right: 1px solid #e5e7eb;
+            user-select: none;
+        }
+        .k-grid-header th:last-child {
+            border-right: none;
+        }
+        .k-grid-content td {
+            padding: 6px 12px;
+            border-bottom: 1px solid #f3f4f6;
+            border-right: 1px solid #f3f4f6;
+            color: #1f2937;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+        }
+        .k-grid-content tr:hover {
+            background-color: #f0fdf4;
+        }
+        .k-grid-footer {
+            background-color: #f9fafb;
+            border-top: 2px solid #e5e7eb;
+            font-weight: 700;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+        }
+        .badge-liq {
+            background-color: #dcfce7;
+            color: #166534;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .badge-trat {
+            background-color: #fef9c3;
+            color: #854d0e;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        /* STAMPA / ESPORTAZIONE PDF: Nasconde tutto tranne il report */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #reportContainer, #reportContainer * {
+                visibility: visible;
+            }
+            #reportContainer {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                border: none !important;
+                box-shadow: none !important;
+            }
+            /* Nasconde i pulsanti interni al report durante la stampa in PDF */
+            #reportContainer button {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col p-4 md:p-8 select-none space-y-6">
+
+    <!-- CONTENITORE CENTRALE SENZA HEADER E SENZA SIDEBAR -->
+    <div class="max-w-5xl w-full mx-auto bg-white rounded-lg border border-gray-300 shadow-md flex flex-col overflow-hidden">
+        
+        <!-- HEADER SCHEDA FORM -->
+        <div class="flex flex-wrap justify-between items-center px-6 py-4 bg-slate-50 border-b border-gray-200">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-file-invoice-dollar text-amber-500 text-lg"></i>
+                <h1 class="text-base font-bold text-gray-800 tracking-tight">Richiesta Di Liquidazione / Anticipo Provvigioni</h1>
+            </div>
+            
+            <!-- BOTTONI AZIONE RIGIDA CON INDICATORE DI SUCCESSO -->
+            <div class="flex items-center space-x-3 mt-2 sm:mt-0">
+                <!-- Spunta verde di conferma -->
+                <div id="successCheck" class="hidden flex items-center space-x-1.5 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200 transition-all duration-200">
+                    <i class="fa-solid fa-circle-check text-sm"></i>
+                    <span id="successText" class="text-xs font-semibold">Operazione completata</span>
+                </div>
+
+                <span class="text-xs font-semibold text-gray-600">Aziendale</span>
+                
+                <!-- Bottoncino Play/Esegui -->
+                <button onclick="eseguiElaborazione()" class="flex items-center space-x-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded text-xs font-semibold shadow-sm transition" title="Esegui Richiesta">
+                    <i class="fa-regular fa-square-caret-right text-sm"></i>
+                    <span>Esegui Richiesta</span>
+                </button>
+
+                <!-- Bottoncini ausiliari ERP (Spunta, Undo) -->
+                <button onclick="confermaForm()" class="p-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded text-gray-700 shadow-sm" title="Salva bozza">
+                    <i class="fa-solid fa-check text-xs"></i>
+                </button>
+                <button onclick="resetForm()" class="p-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded text-gray-700 shadow-sm" title="Ripristina">
+                    <i class="fa-solid fa-rotate-left text-xs"></i>
+                </button>
+                
+                <!-- Pulsante Annulla -->
+                <button onclick="resetForm()" class="flex items-center space-x-1 px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 rounded text-xs text-gray-800 font-semibold shadow-sm">
+                    <i class="fa-solid fa-xmark text-red-600"></i>
+                    <span>Annullo Richiesta</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- FORM PRINCIPALE -->
+        <form id="erpForm" onsubmit="event.preventDefault(); eseguiElaborazione();" class="p-6 space-y-6">
+            
+            <!-- SEZIONE SELEZIONE AGENTI -->
+            <div class="space-y-4">
+                
+                <!-- Riga Tutti gli agenti -->
+                <div class="flex items-center">
+                    <label class="w-40 text-right pr-4 font-semibold text-gray-700 text-xs">Tutti gli agenti</label>
+                    <div class="flex items-center space-x-3">
+                        <select id="tuttiAgenti" class="erp-select w-24 font-bold text-center" onchange="handleTuttiAgentiChange(this.value)">
+                            <option value="Y">Y</option>
+                            <option value="*">*</option>
+                        </select>
+                        <span class="text-[11px] text-gray-500 italic">(Selezionare 'Y' per includere tutti gli agenti, '*' per specificarne uno)</span>
+                    </div>
+                </div>
+
+                <!-- Riga Agente (Combo) e Conto di incrocio -->
+                <div class="flex items-center">
+                    <label class="w-40 text-right pr-4 font-semibold text-gray-700 text-xs">Agente</label>
+                    <div class="w-60">
+                        <select id="codiceAgente" class="erp-select w-full font-medium" onchange="validaCodiceAgente(this.value)">
+                            <option value="">-- Seleziona Agente --</option>
+                            <option value="AI00000001">AI00000001 - BIANCHI MARIO</option>
+                            <option value="AI00000002">AI00000002 - AGENTE SOCIETA PERSONE</option>
+                            <option value="FA001">FA001 - ROSSI PAOLO</option>
+                        </select>
+                    </div>
+                    
+                    <label class="w-36 text-right pr-4 font-semibold text-gray-700 text-xs">Conto di incrocio</label>
+                    <div class="w-52">
+                        <input type="text" id="contoIncrocio" class="erp-input w-full uppercase" placeholder="es. C* o C1020">
+                    </div>
+                </div>
+
+                <!-- Riga Cat gestionali -->
+                <div class="flex items-start">
+                    <label class="w-40 text-right pr-4 pt-1 font-semibold text-gray-700 text-xs">Cat gestionali</label>
+                    <div class="flex flex-wrap gap-1.5 max-w-3xl">
+                        <input type="text" class="cat-input erp-input w-14 text-center uppercase" maxlength="4">
+                        <input type="text" class="cat-input erp-input w-14 text-center uppercase" maxlength="4">
+                        <input type="text" class="cat-input erp-input w-14 text-center uppercase" maxlength="4">
+                        <input type="text" class="cat-input erp-input w-14 text-center uppercase" maxlength="4">
+                        <input type="text" class="cat-input erp-input w-14 text-center uppercase" maxlength="4">
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEZIONE TIPO ELABORAZIONE -->
+            <div class="border-t border-gray-200 pt-4">
+                <h2 class="font-bold text-gray-800 mb-3 text-xs tracking-tight uppercase">Tipo Elaborazione</h2>
+                
+                <div class="space-y-2.5 ml-10">
+                    
+                    <!-- Option 1: Liquidabilità -->
+                    <div class="flex items-center h-7">
+                        <div class="w-36 flex items-center space-x-2">
+                            <input type="radio" id="radioLiquidabilita" name="tipoElaborazione" value="LIQUIDABILITA" class="h-3.5 w-3.5 text-amber-600 focus:ring-amber-500 border-gray-300" onchange="aggiornaAbilitazioniTipo()">
+                            <label for="radioLiquidabilita" class="font-semibold text-gray-700 cursor-pointer">Liquidabilita'</label>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <select id="selLiquidabilitaMode" class="erp-select w-32">
+                                <option value="EFFETTVO">Effettivo</option>
+                            </select>
+                            <span class="text-[11px] text-gray-500 italic">(Aggiorna la data di liquidazione)</span>
+                        </div>
+                    </div>
+
+                    <!-- Option 2: Liquidazione -->
+                    <div class="flex items-center h-7">
+                        <div class="w-36 flex items-center space-x-2">
+                            <input type="radio" id="radioLiquidazione" name="tipoElaborazione" value="LIQUIDAZIONE" class="h-3.5 w-3.5 text-amber-600 focus:ring-amber-500 border-gray-300" onchange="aggiornaAbilitazioniTipo()">
+                            <label for="radioLiquidazione" class="font-semibold text-gray-700 cursor-pointer">Liquidazione</label>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <select id="selLiquidazioneMode" class="erp-select w-32">
+                                <option value="PROVA">Prova</option>
+                                <option value="EFFETTVO">Effettivo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Option 3: Anticipo -->
+                    <div class="flex items-center h-7">
+                        <div class="w-36 flex items-center space-x-2">
+                            <input type="radio" id="radioAnticipo" name="tipoElaborazione" value="ANTICIPO" class="h-3.5 w-3.5 text-amber-600 focus:ring-amber-500 border-gray-300" onchange="aggiornaAbilitazioniTipo()">
+                            <label for="radioAnticipo" class="font-semibold text-gray-700 cursor-pointer">Anticipo</label>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <select id="selAnticipoMode" class="erp-select w-32">
+                                <option value="PROVA">Prova</option>
+                                <option value="EFFETTVO">Effettivo</option>
+                            </select>
+                            <div class="flex items-center space-x-1 pl-2">
+                                <input type="checkbox" id="flagAnticipoIniziale" value="F" class="h-3.5 w-3.5 text-amber-600 rounded border-gray-300">
+                                <label for="flagAnticipoIniziale" class="text-xs text-gray-700">Flag 'F' (Anticipo Iniziale)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Option 4: Straordinarie -->
+                    <div class="flex items-center h-7">
+                        <div class="w-36 flex items-center space-x-2">
+                            <input type="radio" id="radioStraordinarie" name="tipoElaborazione" value="STRAORDINARIE" class="h-3.5 w-3.5 text-amber-600 focus:ring-amber-500 border-gray-300" onchange="aggiornaAbilitazioniTipo()">
+                            <label for="radioStraordinarie" class="font-semibold text-gray-700 cursor-pointer">Straordinarie</label>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <select id="selStraordinarieMode" class="erp-select w-32">
+                                <option value="PROVA">Prova</option>
+                                <option value="EFFETTVO">Effettivo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- SEZIONE PERIODO LIQUIDAZIONE -->
+            <div class="border-t border-gray-200 pt-4">
+                <h2 class="font-bold text-gray-800 mb-3 text-xs tracking-tight uppercase">Periodo liquidazione</h2>
+                
+                <div class="space-y-3">
+                    <div class="flex items-center">
+                        <label class="w-40 text-right pr-4 font-semibold text-gray-700 text-xs">Mese</label>
+                        <input type="number" id="periodoMese" min="1" max="12" class="erp-input w-20 text-center" value="12" required>
+                        
+                        <label class="w-36 text-right pr-4 font-semibold text-gray-700 text-xs">Anno</label>
+                        <input type="number" id="periodoAnno" min="2000" max="2099" class="erp-input w-28 text-center" value="2024" required>
+                    </div>
+
+                    <div class="flex items-center">
+                        <label class="w-40 text-right pr-4 font-semibold text-gray-700 text-xs">Data registrazione</label>
+                        <div class="w-52">
+                            <input type="date" id="dataRegistrazione" class="erp-input w-full" value="2024-12-31" required>
+                        </div>
+
+                        <label class="w-36 text-right pr-4 font-semibold text-gray-700 text-xs">Data Cambio</label>
+                        <div class="w-52">
+                            <input type="date" id="dataCambio" class="erp-input w-full" onblur="validaDataCambio(this.value)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- LOADER DI CARICAMENTO (3 SECONDI) -->
+    <div id="loaderContainer" class="hidden max-w-5xl w-full mx-auto bg-white rounded-lg border border-gray-300 shadow-md p-8 flex flex-col items-center justify-center space-y-3">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-500"></div>
+        <p class="text-xs font-semibold text-gray-700 uppercase tracking-wider font-['Verdana']">Elaborazione richiesta in corso... (Attendere 3 secondi)</p>
+    </div>
+
+    <!-- FRAME REPORT TELERIK (INIZIALMENTE NASCOSTO) -->
+    <div id="reportContainer" class="hidden max-w-5xl w-full mx-auto bg-white rounded-lg border border-gray-300 shadow-md flex flex-col overflow-hidden">
+        
+        <!-- TOOLBAR TELERIK REPORT -->
+        <div class="flex flex-wrap justify-between items-center px-4 py-2.5 bg-gray-100 border-b border-gray-300">
+            <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-1.5 text-gray-700 font-bold text-xs uppercase tracking-wider font-['Verdana']">
+                    <i class="fa-solid fa-table-cells text-amber-500"></i>
+                    <span>Telerik Report Viewer - Provvigioni 12/2024</span>
+                </div>
+                <span id="reportFilterBadge" class="bg-blue-100 text-blue-800 text-[11px] px-2 py-0.5 rounded border border-blue-200 font-semibold font-['Verdana']">
+                    Tutti gli Agenti
+                </span>
+            </div>
+
+            <!-- ACTION BUTTONS: ESPORTA CSV E ESPORTA PDF -->
+            <div class="flex items-center space-x-2">
+                <button onclick="exportReportToCSV()" class="flex items-center space-x-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold shadow-sm transition font-['Verdana']">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <span>Esporta (CSV)</span>
+                </button>
+                <button onclick="window.print()" class="flex items-center space-x-1.5 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold shadow-sm transition font-['Verdana']">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span>Esporta PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- GRIGLIA TELERIK STYLE CON FONT VERDANA -->
+        <div class="p-4 overflow-x-auto">
+            <div class="k-grid">
+                <table class="w-full text-left border-collapse">
+                    <thead class="k-grid-header text-[11px]">
+                        <tr>
+                            <th>Cod. Agente</th>
+                            <th>Agente</th>
+                            <th>Mov. / Doc.</th>
+                            <th>Data Doc</th>
+                            <th>Cliente</th>
+                            <th>Rag. Sociale</th>
+                            <th class="text-right">Imponibile (€)</th>
+                            <th class="text-center">%</th>
+                            <th class="text-right">Provvigione (€)</th>
+                            <th class="text-center">D/A</th>
+                            <th class="text-center">Stato</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportTableBody" class="k-grid-content text-[11px]">
+                        <!-- Popolato dinamicamente da JS -->
+                    </tbody>
+                    <tfoot class="k-grid-footer text-xs">
+                        <tr>
+                            <td colspan="6" class="text-right font-bold text-gray-700 py-2">Totale Provvigioni Liquidabili:</td>
+                            <td id="totImponibileLiq" class="text-right font-bold text-emerald-700 py-2">€ 0,00</td>
+                            <td></td>
+                            <td id="totProvvigioniLiq" class="text-right font-bold text-emerald-700 py-2">€ 0,00</td>
+                            <td colspan="2"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="6" class="text-right font-bold text-gray-700 py-2">Totale Provvigioni Da Trattare:</td>
+                            <td id="totImponibileTrat" class="text-right font-bold text-amber-700 py-2">€ 0,00</td>
+                            <td></td>
+                            <td id="totProvvigioniTrat" class="text-right font-bold text-amber-700 py-2">€ 0,00</td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        
+        <!-- PAGER TELERIK -->
+        <div class="px-4 py-2 bg-gray-50 border-t border-gray-200 flex justify-between items-center text-xs text-gray-500 font-['Verdana']">
+            <span>Mostrati <strong id="recCount">0</strong> record correlati</span>
+            <span class="italic">Telerik UI Engine v2024.3 - Ready</span>
+        </div>
+    </div>
+
+    <!-- LOGICA JAVASCRIPT INTEGRATA -->
+    <script>
+        // DATI ESTRATTI DAL PDF "Liquidazione provvigioni 122024.pdf"[cite: 2, 3, 4]
+        const datasetProvvigioni = [
+            // Agente AI00000001 - BIANCHI MARIO[cite: 2]
+            { agenteCod: "AI00000001", agenteNome: "BIANCHI MARIO", mov: "2024FA000010", dataDoc: "18/12/2024", contoCli: "CI00000001", ragSoc: "Cliente Italia", imponibile: 100.00, perc: 10.00, provvigione: 10.00, da: "A", stato: "LIQUIDABILE IN DATA 31/12/24" },
+            
+            // Agente AI00000002 - AGENTE SOCIETA PERSONE[cite: 3]
+            { agenteCod: "AI00000002", agenteNome: "AGENTE SOCIETA PERSONE", mov: "246 (FV 6)", dataDoc: "01/05/2024", contoCli: "CI00000004", ragSoc: "FORMULA SPA", imponibile: 1500.00, perc: 10.00, provvigione: 75.00, da: "A", stato: "LIQUIDABILE IN DATA 31/12/24" },
+            { agenteCod: "AI00000002", agenteNome: "AGENTE SOCIETA PERSONE", mov: "246 (FV 6)", dataDoc: "01/05/2024", contoCli: "CI00000004", ragSoc: "FORMULA SPA", imponibile: 1500.00, perc: 10.00, provvigione: 75.00, da: "A", stato: "DA TRATTARE" },
+            { agenteCod: "AI00000002", agenteNome: "AGENTE SOCIETA PERSONE", mov: "247 (FV 7)", dataDoc: "01/06/2024", contoCli: "CI00000004", ragSoc: "FORMULA SPA", imponibile: 1500.00, perc: 10.00, provvigione: 150.00, da: "A", stato: "LIQUIDABILE IN DATA 31/12/24" },
+            { agenteCod: "AI00000002", agenteNome: "AGENTE SOCIETA PERSONE", mov: "247 (FV 7)", dataDoc: "01/06/2024", contoCli: "CI00000004", ragSoc: "FORMULA SPA", imponibile: 1500.00, perc: 10.00, provvigione: 150.00, da: "A", stato: "DA TRATTARE" },
+            { agenteCod: "AI00000002", agenteNome: "AGENTE SOCIETA PERSONE", mov: "248 (FV 8)", dataDoc: "01/07/2024", contoCli: "CI00000004", ragSoc: "FORMULA SPA", imponibile: 2000.00, perc: 10.00, provvigione: 200.00, da: "A", stato: "LIQUIDABILE IN DATA 31/12/24" },
+            { agenteCod: "AI00000002", agenteNome: "AGENTE SOCIETA PERSONE", mov: "248 (FV 8)", dataDoc: "01/07/2024", contoCli: "CI00000004", ragSoc: "FORMULA SPA", imponibile: 2000.00, perc: 10.00, provvigione: 200.00, da: "A", stato: "DA TRATTARE" },
+
+            // Agente FA001 - ROSSI PAOLO[cite: 4]
+            { agenteCod: "FA001", agenteNome: "ROSSI PAOLO", mov: "CG 2024 AG 7", dataDoc: "31/07/2025", contoCli: "-", ragSoc: "CONGUAGLIO PROVVIGIONI", imponibile: 100.00, perc: 10.00, provvigione: 10.00, da: "D", stato: "LIQUIDABILE IN DATA 20/12/24" },
+            { agenteCod: "FA001", agenteNome: "ROSSI PAOLO", mov: "CG 2024 AG 8", dataDoc: "31/07/2025", contoCli: "-", ragSoc: "CONGUAGLIO PROVVIGIONI", imponibile: 100.00, perc: 10.00, provvigione: 10.00, da: "D", stato: "LIQUIDABILE IN DATA 21/12/24" },
+            { agenteCod: "FA001", agenteNome: "ROSSI PAOLO", mov: "2024FA000007", dataDoc: "03/10/2024", contoCli: "CI00000001", ragSoc: "Cliente Italia", imponibile: 61.00, perc: 10.00, provvigione: 10.00, da: "A", stato: "LIQUIDABILE IN DATA 31/12/24" },
+            { agenteCod: "FA001", agenteNome: "ROSSI PAOLO", mov: "2024FA000008", dataDoc: "18/11/2024", contoCli: "CI00000008", ragSoc: "CLIENTE ITALIA CON FIDO", imponibile: 49.99, perc: 10.00, provvigione: 4.78, da: "A", stato: "LIQUIDABILE IN DATA 31/12/24" },
+            { agenteCod: "FA001", agenteNome: "ROSSI PAOLO", mov: "2024FA000008", dataDoc: "18/11/2024", contoCli: "CI00000008", ragSoc: "CLIENTE ITALIA CON FIDO", imponibile: 96.41, perc: 10.00, provvigione: 9.22, da: "A", stato: "DA TRATTARE" },
+            { agenteCod: "FA001", agenteNome: "ROSSI PAOLO", mov: "3686 (AG 5)", dataDoc: "20/12/2024", contoCli: "CI001", ragSoc: "Cliente prova", imponibile: 1000.00, perc: 5.00, provvigione: 50.00, da: "A", stato: "LIQUIDABILE IN DATA 20/12/24" },
+            { agenteCod: "FA001", agenteNome: "ROSSI PAOLO", mov: "3686 (AG 5)", dataDoc: "20/12/2024", contoCli: "CI001", ragSoc: "Cliente prova", imponibile: 100.00, perc: 10.00, provvigione: 10.00, da: "A", stato: "LIQUIDABILE IN DATA 20/12/24" }
+        ];
+
+        let currentFilteredData = [];
+
+        window.onload = function() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+
+            document.getElementById('periodoMese').value = "12";
+            document.getElementById('periodoAnno').value = "2024";
+            document.getElementById('dataRegistrazione').value = `${yyyy}-${mm}-${dd}`;
+            
+            document.getElementById('radioLiquidazione').checked = true;
+            aggiornaAbilitazioniTipo();
+        };
+
+        function handleTuttiAgentiChange(val) {
+            const agenteSelect = document.getElementById('codiceAgente');
+            if (val === 'Y') {
+                agenteSelect.disabled = false;
+                agenteSelect.value = "";
+            } else if (val === '*') {
+                agenteSelect.disabled = false;
+            }
+        }
+
+        function validaCodiceAgente(val) {
+            const tuttiAgenti = document.getElementById('tuttiAgenti').value;
+            if (tuttiAgenti === 'Y') return true;
+            const select = document.getElementById('codiceAgente');
+            if (!val) {
+                select.classList.add('border-red-500');
+                return false;
+            }
+            select.classList.remove('border-red-500');
+            return true;
+        }
+
+        function aggiornaAbilitazioniTipo() {
+            const tipo = document.querySelector('input[name="tipoElaborazione"]:checked')?.value;
+            
+            const modeLiq = document.getElementById('selLiquidabilitaMode');
+            const modeLiqz = document.getElementById('selLiquidazioneMode');
+            const modeAnt = document.getElementById('selAnticipoMode');
+            const flagAnt = document.getElementById('flagAnticipoIniziale');
+            const modeStra = document.getElementById('selStraordinarieMode');
+
+            modeLiq.disabled = true;
+            modeLiqz.disabled = true;
+            modeAnt.disabled = true;
+            flagAnt.disabled = true;
+            modeStra.disabled = true;
+
+            if (tipo === 'LIQUIDABILITA') modeLiq.disabled = false;
+            else if (tipo === 'LIQUIDAZIONE') modeLiqz.disabled = false;
+            else if (tipo === 'ANTICIPO') { modeAnt.disabled = false; flagAnt.disabled = false; }
+            else if (tipo === 'STRAORDINARIE') modeStra.disabled = false;
+        }
+
+        function validaDataCambio(val) {
+            if (!val) return true;
+            const dataCambio = new Date(val);
+            const dataOggi = new Date();
+            dataOggi.setHours(0,0,0,0);
+
+            if (dataCambio >= dataOggi) {
+                document.getElementById('dataCambio').classList.add('border-red-500');
+                return false;
+            } else {
+                document.getElementById('dataCambio').classList.remove('border-red-500');
+                return true;
+            }
+        }
+
+        // AZIONE PRINCIPALE: ESEGUI ELABORAZIONE CON LOADER DI 3 SECONDI
+        function eseguiElaborazione() {
+            const tuttiAgenti = document.getElementById('tuttiAgenti').value;
+            const codiceAgente = document.getElementById('codiceAgente').value;
+
+            if (tuttiAgenti === '*' && !validaCodiceAgente(codiceAgente)) {
+                alert("Selezionare un agente specifico se 'Tutti gli agenti' è impostato su '*'");
+                return;
+            }
+
+            mostraSpuntaVerde("Elaborazione avviata...");
+
+            document.getElementById('reportContainer').classList.add('hidden');
+            const loader = document.getElementById('loaderContainer');
+            loader.classList.remove('hidden');
+            loader.scrollIntoView({ behavior: 'smooth' });
+
+            setTimeout(() => {
+                loader.classList.add('hidden');
+
+                if (tuttiAgenti === 'Y' && !codiceAgente) {
+                    currentFilteredData = datasetProvvigioni;
+                    document.getElementById('reportFilterBadge').innerText = "Tutti gli Agenti";
+                } else {
+                    const targetAgente = codiceAgente;
+                    currentFilteredData = datasetProvvigioni.filter(row => row.agenteCod === targetAgente);
+                    document.getElementById('reportFilterBadge').innerText = `Agente: ${targetAgente}`;
+                }
+
+                renderTelerikReport(currentFilteredData);
+                document.getElementById('reportContainer').classList.remove('hidden');
+                document.getElementById('reportContainer').scrollIntoView({ behavior: 'smooth' });
+                mostraSpuntaVerde("Richiesta eseguita con successo");
+            }, 3000);
+        }
+
+        // RENDER DELLA TABELLA IN STILE TELERIK GRID CON FONT VERDANA
+        function renderTelerikReport(data) {
+            const tbody = document.getElementById('reportTableBody');
+            tbody.innerHTML = "";
+
+            let totLiqImponibile = 0;
+            let totLiqProvvigione = 0;
+            let totTratImponibile = 0;
+            let totTratProvvigione = 0;
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="11" class="text-center py-4 text-gray-500 italic">Nessun dato trovato per i criteri selezionati</td></tr>`;
+                document.getElementById('recCount').innerText = "0";
+                document.getElementById('totImponibileLiq').innerText = "€ 0,00";
+                document.getElementById('totProvvigioniLiq').innerText = "€ 0,00";
+                document.getElementById('totImponibileTrat').innerText = "€ 0,00";
+                document.getElementById('totProvvigioniTrat').innerText = "€ 0,00";
+                return;
+            }
+
+            data.forEach((row) => {
+                const isLiquidabile = row.stato.includes("LIQUIDABILE");
+                
+                if (isLiquidabile) {
+                    totLiqImponibile += row.imponibile;
+                    totLiqProvvigione += row.provvigione;
+                } else {
+                    totTratImponibile += row.imponibile;
+                    totTratProvvigione += row.provvigione;
+                }
+
+                const badgeClass = isLiquidabile ? "badge-liq" : "badge-trat";
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="font-semibold">${row.agenteCod}</td>
+                    <td>${row.agenteNome}</td>
+                    <td>${row.mov}</td>
+                    <td class="text-center">${row.dataDoc}</td>
+                    <td>${row.contoCli}</td>
+                    <td>${row.ragSoc}</td>
+                    <td class="text-right">${formatCurrency(row.imponibile)}</td>
+                    <td class="text-center">${row.perc.toFixed(2)}%</td>
+                    <td class="text-right font-bold ${row.da === 'D' ? 'text-red-600' : 'text-gray-900'}">${formatCurrency(row.provvigione)}</td>
+                    <td class="text-center font-bold ${row.da === 'D' ? 'text-red-600' : 'text-blue-600'}">${row.da}</td>
+                    <td class="text-center"><span class="${badgeClass}">${row.stato}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('recCount').innerText = data.length;
+            document.getElementById('totImponibileLiq').innerText = `€ ${formatCurrency(totLiqImponibile)}`;
+            document.getElementById('totProvvigioniLiq').innerText = `€ ${formatCurrency(totLiqProvvigione)}`;
+            document.getElementById('totImponibileTrat').innerText = `€ ${formatCurrency(totTratImponibile)}`;
+            document.getElementById('totProvvigioniTrat').innerText = `€ ${formatCurrency(totTratProvvigione)}`;
+        }
+
+        function formatCurrency(val) {
+            return val.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // ESPORTAZIONE CSV (SOLO DATI DEL REPORT)
+        function exportReportToCSV() {
+            if (currentFilteredData.length === 0) {
+                alert("Nessun dato da esportare");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Cod Agente;Nome Agente;Movimento/Doc;Data Doc;Conto Cliente;Ragione Sociale;Imponibile;Perc;Provvigione;DA;Stato\n";
+
+            currentFilteredData.forEach(row => {
+                csvContent += `"${row.agenteCod}";"${row.agenteNome}";"${row.mov}";"${row.dataDoc}";"${row.contoCli}";"${row.ragSoc}";"${row.imponibile}";"${row.perc}";"${row.provvigione}";"${row.da}";"${row.stato}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Liquidazione_Provvigioni_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function confermaForm() {
+            mostraSpuntaVerde("Bozza salvata");
+        }
+
+        function resetForm() {
+            document.getElementById('erpForm').reset();
+            document.getElementById('tuttiAgenti').value = 'Y';
+            document.getElementById('codiceAgente').value = '';
+            document.getElementById('radioLiquidazione').checked = true;
+            aggiornaAbilitazioniTipo();
+            document.getElementById('loaderContainer').classList.add('hidden');
+            document.getElementById('reportContainer').classList.add('hidden');
+            nascondiSpuntaVerde();
+        }
+
+        let timerSpunta = null;
+        function mostraSpuntaVerde(msg = "Operazione completata") {
+            const elem = document.getElementById('successCheck');
+            const textElem = document.getElementById('successText');
+            textElem.innerText = msg;
+            elem.classList.remove('hidden');
+
+            if (timerSpunta) clearTimeout(timerSpunta);
+            timerSpunta = setTimeout(() => {
+                elem.classList.add('hidden');
+            }, 3000);
+        }
+
+        function nascondiSpuntaVerde() {
+            document.getElementById('successCheck').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
